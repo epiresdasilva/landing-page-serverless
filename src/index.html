@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tendências da Indústria SC - E-book Gratuito</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="assets/logo.png" alt="Logo">
+            </div>
+        </header>
+
+        <main>
+            <div class="content">
+                <div class="text-content">
+                    <h1>Tendências da Indústria em Santa Catarina</h1>
+                    <h2>Descubra as principais tendências que estão moldando o futuro industrial no estado</h2>
+                    
+                    <ul class="benefits">
+                        <li><i class="fas fa-check-circle"></i> Análise completa do cenário industrial catarinense</li>
+                        <li><i class="fas fa-check-circle"></i> Dados exclusivos sobre crescimento setorial</li>
+                        <li><i class="fas fa-check-circle"></i> Previsões para os próximos 5 anos</li>
+                        <li><i class="fas fa-check-circle"></i> Estratégias para se adaptar às mudanças</li>
+                    </ul>
+                    
+                    <div class="cta-text">
+                        <p>Preencha o formulário para receber gratuitamente o e-book completo em seu email.</p>
+                    </div>
+                </div>
+                
+                <div class="ebook-preview">
+                    <img src="assets/ebook-cover.jpeg" alt="E-book: Tendências da Indústria em Santa Catarina">
+                </div>
+            </div>
+
+            <div class="form-container">
+                <h3>Baixe agora seu e-book gratuito</h3>
+                <form id="download-form">
+                    <div class="form-group">
+                        <label for="name">Nome completo</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">E-mail profissional</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company">Empresa</label>
+                        <input type="text" id="company" name="company" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="position">Cargo</label>
+                        <input type="text" id="position" name="position" required>
+                    </div>
+                    
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">Concordo em receber comunicações sobre produtos e serviços</label>
+                    </div>
+                    
+                    <button type="submit" class="download-btn">BAIXAR E-BOOK AGORA</button>
+                </form>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Tendências da Indústria SC. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+
+    <div id="success-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Obrigado pelo seu interesse!</h2>
+            <p>Baixe agora mesmo o ebook pelo botão abaixo.</p>
+            <a href="#" id="direct-download" class="download-btn">Baixar Agora</a>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
