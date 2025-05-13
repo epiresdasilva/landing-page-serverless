@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('success-modal');
     const closeBtn = document.querySelector('.close');
     const directDownloadBtn = document.getElementById('direct-download');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
     
     // Função para enviar dados para API Gateway
     async function submitForm(formData) {
@@ -26,12 +28,29 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Erro:', error);
             alert('Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.');
+            return null;
+        }
+    }
+    
+    // Função para mostrar estado de carregamento
+    function setLoadingState(isLoading) {
+        if (isLoading) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Processando...';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            submitBtn.textContent = originalBtnText;
         }
     }
     
     // Manipulador de envio do formulário
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        // Ativar estado de carregamento
+        setLoadingState(true);
         
         const formData = {
             name: document.getElementById('name').value,
@@ -41,14 +60,24 @@ document.addEventListener('DOMContentLoaded', function() {
             timestamp: new Date().toISOString()
         };
         
-        const result = await submitForm(formData);
-        
-        if (result) {
-            // Configurar o link de download direto
-            directDownloadBtn.href = 'assets/tendencias-industria-sc.pdf';
+        try {
+            const result = await submitForm(formData);
             
-            // Mostrar modal de sucesso
-            modal.style.display = 'block';
+            if (result) {
+                // Configurar o link de download direto
+                directDownloadBtn.href = 'assets/tendencias-industria-sc.pdf';
+                
+                // Mostrar modal de sucesso
+                modal.style.display = 'block';
+                
+                // Limpar o formulário
+                form.reset();
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+        } finally {
+            // Desativar estado de carregamento
+            setLoadingState(false);
         }
     });
     
