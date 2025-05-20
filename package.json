@@ -1,17 +1,23 @@
 {
   "name": "ebook-landing-page",
   "version": "1.0.0",
-  "description": "Landing page para download de e-book",
+  "description": "Landing page para download de e-book sobre tendências da indústria em SC",
   "main": "index.js",
   "scripts": {
     "deploy": "serverless deploy",
-    "deploy:prod": "serverless deploy --stage prod",
-    "deploy:static": "aws s3 sync src/ s3://$(grep 's3Bucket:' serverless.yml | awk '{print $2}')/ --delete",
-    "invalidate-cache": "aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query \"DistributionList.Items[?Aliases.Items[0]=='$(grep 's3Bucket:' serverless.yml | awk '{print $2}')\"].Id\" --output text) --paths \"/*\""
+    "deploy:static": "aws s3 sync src/ s3://${DOMAIN_NAME}/ --delete",
+    "invalidate-cache": "aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query \"DistributionList.Items[?Aliases.Items[0]=='${DOMAIN_NAME}'].Id\" --output text) --paths \"/*\"",
+    "update-api-url": "node scripts/update-api-url.js"
   },
+  "keywords": [
+    "landing-page",
+    "ebook",
+    "serverless",
+    "aws"
+  ],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "serverless": "^3.30.1"
+  "dependencies": {
+    "aws-sdk": "^2.1048.0"
   }
 }

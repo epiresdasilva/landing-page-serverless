@@ -34,8 +34,20 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy with Serverless Framework
+        id: deploy
         run: |
-          serverless deploy --param="domainName=${{ secrets.DOMAIN_NAME }}" --param="emailNotification=${{ secrets.EMAIL_NOTIFICATION }}" --param="certificateArn=${{ secrets.CERTIFICATE_ARN }}"
+          OUTPUT=$(serverless deploy --param="domainName=${{ secrets.DOMAIN_NAME }}" --param="emailNotification=${{ secrets.EMAIL_NOTIFICATION }}" --param="certificateArn=${{ secrets.CERTIFICATE_ARN }}" --verbose)
+          echo "$OUTPUT"
+          
+          # Extract API endpoint from serverless output
+          API_ENDPOINT=$(echo "$OUTPUT" | grep -o 'ApiEndpoint: .*' | sed 's/ApiEndpoint: //')
+          echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+          echo "API endpoint extracted: $API_ENDPOINT"
+
+      - name: Update API URL in script.js
+        run: |
+          echo "Updating API URL to: ${{ env.API_ENDPOINT }}"
+          node scripts/update-api-url.js "${{ env.API_ENDPOINT }}"
 
       - name: Upload static files to S3
         run: |
