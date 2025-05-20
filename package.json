@@ -1,0 +1,17 @@
+{
+  "name": "ebook-landing-page",
+  "version": "1.0.0",
+  "description": "Landing page para download de e-book",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "deploy:static": "aws s3 sync src/ s3://$(grep 's3Bucket:' serverless.yml | awk '{print $2}')/ --delete",
+    "invalidate-cache": "aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query \"DistributionList.Items[?Aliases.Items[0]=='$(grep 's3Bucket:' serverless.yml | awk '{print $2}')\"].Id\" --output text) --paths \"/*\""
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless": "^3.30.1"
+  }
+}

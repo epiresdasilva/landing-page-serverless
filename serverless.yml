@@ -1,0 +1,142 @@
+service: ebook-landing-page
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    TABLE_NAME: ${self:service}-subscribers-${self:provider.stage}
+    NOTIFICATION_EMAIL: ${param:emailNotification, 'seu-email@exemplo.com'}
+    DOMAIN_NAME: ${param:domainName, 'ebook.exemplo.com'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource: !GetAtt SubscribersTable.Arn
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource: '*'
+
+custom:
+  s3Bucket: ${param:domainName, 'ebook.exemplo.com'}
+  certificateArn: ${param:certificateArn, ''}
+
+functions:
+  subscribe:
+    handler: lambda/subscribe/index.handler
+    events:
+      - http:
+          path: subscribe
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    # S3 Bucket para armazenar a landing page estática
+    WebsiteBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.s3Bucket}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: error.html
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        Tags:
+          - Key: Name
+            Value: ${self:service}-website-bucket-${self:provider.stage}
+
+    # Política de bucket para permitir acesso público de leitura
+    WebsiteBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref WebsiteBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
+
+    # CloudFront Distribution
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            - DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+              Id: S3Origin
+              S3OriginConfig:
+                OriginAccessIdentity: ''
+          Enabled: true
+          DefaultRootObject: index.html
+          HttpVersion: http2
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            TargetOriginId: S3Origin
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+          PriceClass: PriceClass_100
+          ViewerCertificate:
+            AcmCertificateArn: ${self:custom.certificateArn}
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          Aliases:
+            - ${self:custom.s3Bucket}
+
+    # DynamoDB Table para armazenar inscrições
+    SubscribersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        Tags:
+          - Key: Name
+            Value: ${self:service}-subscribers-table-${self:provider.stage}
+
+  Outputs:
+    WebsiteURL:
+      Description: URL do site S3
+      Value: !GetAtt WebsiteBucket.WebsiteURL
+
+    CloudFrontURL:
+      Description: URL de distribuição do CloudFront
+      Value: !Sub "https://${CloudFrontDistribution.DomainName}"
+
+    ApiEndpoint:
+      Description: URL do endpoint da API
+      Value: 
+        Fn::Join:
+          - ""
+          - - "https://"
+            - !Ref ApiGatewayRestApi
+            - ".execute-api."
+            - !Ref AWS::Region
+            - ".amazonaws.com/${self:provider.stage}/subscribe"
+
+    CustomDomainURL:
+      Description: URL personalizado (quando configurado no Route53)
+      Value: !Sub "https://${self:custom.s3Bucket}"
