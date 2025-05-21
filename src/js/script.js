@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result) {
                 // Configurar o link de download direto
-                directDownloadBtn.href = 'assets/tendencias-industria-sc.pdf';
+                directDownloadBtn.href = 'assets/dummy.pdf';
                 
                 // Mostrar modal de sucesso
                 modal.style.display = 'block';
