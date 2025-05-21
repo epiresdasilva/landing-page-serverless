@@ -4,10 +4,11 @@
   "description": "Landing page para download de e-book sobre tendências da indústria em SC",
   "main": "index.js",
   "scripts": {
-    "deploy": "serverless deploy",
-    "deploy:static": "aws s3 sync src/ s3://${DOMAIN_NAME}/ --delete",
-    "invalidate-cache": "aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query \"DistributionList.Items[?Aliases.Items[0]=='${DOMAIN_NAME}'].Id\" --output text) --paths \"/*\"",
-    "update-api-url": "node scripts/update-api-url.js"
+    "deploy": "serverless deploy --param=\"stackName=$npm_config_stack\" --param=\"domainName=$npm_config_domain\" --param=\"emailNotification=$npm_config_email\" --param=\"certificateArn=$npm_config_cert\"",
+    "deploy:static": "aws s3 sync src/ s3://$npm_config_stack-website-$npm_config_stage/ --delete --exclude 'assets/tendencias-industria-sc.pdf'",
+    "deploy:ebook": "aws s3 cp src/assets/tendencias-industria-sc.pdf s3://$npm_config_stack-ebooks-$npm_config_stage/assets/",
+    "deploy:all": "npm run deploy && npm run deploy:static && npm run deploy:ebook && npm run invalidate-cache",
+    "invalidate-cache": "aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query \"DistributionList.Items[?Aliases.Items[0]=='$npm_config_domain'].Id\" --output text) --paths \"/*\""
   },
   "keywords": [
     "landing-page",

@@ -63,23 +63,32 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const result = await submitForm(formData);
             
-            if (result) {
-                // Configurar o link de download direto
-                directDownloadBtn.href = 'assets/dummy.pdf';
+            if (result && result.downloadUrl) {
+                // Configurar o link de download direto com a URL assinada
+                directDownloadBtn.href = result.downloadUrl;
                 
                 // Mostrar modal de sucesso
                 modal.style.display = 'block';
                 
+                // Iniciar download automático após 1 segundo
+                setTimeout(() => {
+                    window.location.href = result.downloadUrl;
+                }, 1000);
+                
                 // Limpar o formulário
                 form.reset();
+            } else {
+                throw new Error('URL de download não recebida');
             }
         } catch (error) {
             console.error('Erro:', error);
+            alert('Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.');
         } finally {
             // Desativar estado de carregamento
             setLoadingState(false);
         }
     });
+    
     
     // Fechar modal quando clicar no X
     closeBtn.addEventListener('click', function() {

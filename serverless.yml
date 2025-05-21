@@ -1,4 +1,4 @@
-service: ebook-landing-page
+service: ${param:stackName, 'ebook-landing-page'}
 
 frameworkVersion: '3'
 
@@ -11,6 +11,8 @@ provider:
     TABLE_NAME: ${self:service}-subscribers-${self:provider.stage}
     NOTIFICATION_EMAIL: ${param:emailNotification, 'seu-email@exemplo.com'}
     DOMAIN_NAME: ${param:domainName, 'ebook.exemplo.com'}
+    EBOOK_BUCKET: ${self:service}-ebooks-${self:provider.stage}
+    EBOOK_KEY: assets/tendencias-industria-sc.pdf
   iam:
     role:
       statements:
@@ -23,8 +25,13 @@ provider:
             - ses:SendEmail
             - ses:SendRawEmail
           Resource: '*'
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+          Resource: !Sub "arn:aws:s3:::${self:service}-ebooks-${self:provider.stage}/*"
 
 custom:
+  stackName: ${param:stackName, 'ebook-landing-page'}
   s3Bucket: ${param:domainName, 'ebook.exemplo.com'}
   certificateArn: ${param:certificateArn, ''}
 
@@ -43,7 +50,7 @@ resources:
     WebsiteBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.s3Bucket}
+        BucketName: ${self:custom.stackName}-website-${self:provider.stage}
         WebsiteConfiguration:
           IndexDocument: index.html
           ErrorDocument: error.html
@@ -68,6 +75,21 @@ resources:
               Principal: '*'
               Action: 's3:GetObject'
               Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
+              
+    # S3 Bucket privado para armazenar o e-book
+    EbookBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.stackName}-ebooks-${self:provider.stage}
+        AccessControl: Private
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        Tags:
+          - Key: Name
+            Value: ${self:service}-ebooks-bucket-${self:provider.stage}
 
     # CloudFront Distribution
     CloudFrontDistribution:
