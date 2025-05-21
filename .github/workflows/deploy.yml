@@ -3,49 +3,59 @@ name: Deploy Landing Page
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
-      
+          cache: 'npm'
+
       - name: Install dependencies
-        run: npm ci
-      
-      - name: Deploy serverless stack
         run: |
-          npm run deploy --stack=${{ secrets.STACK_NAME }} --domain=${{ secrets.DOMAIN_NAME }} --email=${{ secrets.EMAIL_NOTIFICATION }} --cert=${{ secrets.CERTIFICATE_ARN }} --stage=${{ secrets.STAGE }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-      
+          npm install -g serverless@3.x
+          npm install
+          cd lambda/subscribe && npm install && cd ../..
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy with Serverless Framework
+        id: deploy
+        run: |
+          OUTPUT=$(serverless deploy --param="stackName=${{ secrets.STACK_NAME }}" --param="domainName=${{ secrets.DOMAIN_NAME }}" --param="emailNotification=${{ secrets.EMAIL_NOTIFICATION }}" --param="certificateArn=${{ secrets.CERTIFICATE_ARN }}" --stage=${{ secrets.STAGE }} --verbose)
+          echo "$OUTPUT"
+          API_ENDPOINT=$(echo "$OUTPUT" | grep -o 'ApiEndpoint: .*' | sed 's/ApiEndpoint: //')
+          echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
+
+      - name: Update API URL in script.js
+        run: |
+          echo "Updating API URL to: ${{ steps.deploy.outputs.api_endpoint }}"
+          node scripts/update-api-url.js "${{ steps.deploy.outputs.api_endpoint }}"
+
       - name: Deploy static assets
         run: |
-          npm run deploy:static --stack=${{ secrets.STACK_NAME }} --stage=${{ secrets.STAGE }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-      
+          aws s3 sync src/ s3://${{ secrets.STACK_NAME }}-website-${{ secrets.STAGE }}/ --delete --exclude 'assets/tendencias-industria-sc.pdf'
+
       - name: Deploy e-book to private bucket
         run: |
-          npm run deploy:ebook --stack=${{ secrets.STACK_NAME }} --stage=${{ secrets.STAGE }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-      
+          aws s3 cp src/assets/tendencias-industria-sc.pdf s3://${{ secrets.STACK_NAME }}-ebooks-${{ secrets.STAGE }}/assets/
+
       - name: Invalidate CloudFront cache
         run: |
-          npm run invalidate-cache --stack=${{ secrets.STACK_NAME }} --domain=${{ secrets.DOMAIN_NAME }} --stage=${{ secrets.STAGE }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='${{ secrets.DOMAIN_NAME }}'].Id" --output text)
+          if [ ! -z "$DISTRIBUTION_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+          fi
