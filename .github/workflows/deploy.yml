@@ -38,8 +38,6 @@ jobs:
         run: |
           OUTPUT=$(serverless deploy --param="domainName=${{ secrets.DOMAIN_NAME }}" --param="emailNotification=${{ secrets.EMAIL_NOTIFICATION }}" --param="certificateArn=${{ secrets.CERTIFICATE_ARN }}" --verbose)
           echo "$OUTPUT"
-          API_ENDPOINT=$(echo "$OUTPUT" | grep -o 'ApiEndpoint: .*' | sed 's/ApiEndpoint: //')
-          echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
           
       - name: Update API URL in script.js
         run: |
