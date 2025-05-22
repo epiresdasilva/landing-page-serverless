@@ -47,11 +47,11 @@ jobs:
 
       - name: Deploy static assets
         run: |
-          aws s3 sync src/ s3://${{ secrets.STACK_NAME }}-website-${{ secrets.STAGE }}/ --delete --exclude 'assets/tendencias-industria-sc.pdf'
+          aws s3 sync src/ s3://${{ secrets.STACK_NAME }}-website-${{ secrets.STAGE }}/ --delete --exclude 'assets/dummy.pdf'
 
       - name: Deploy e-book to private bucket
         run: |
-          aws s3 cp src/assets/tendencias-industria-sc.pdf s3://${{ secrets.STACK_NAME }}-ebooks-${{ secrets.STAGE }}/assets/
+          aws s3 cp src/assets/dummy.pdf s3://${{ secrets.STACK_NAME }}-ebooks-${{ secrets.STAGE }}/assets/
 
       - name: Invalidate CloudFront cache
         run: |
