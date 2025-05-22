@@ -1,4 +1,4 @@
-service: ${param:stackName, 'ebook-landing-page'}
+service: ebook-landing-page
 
 frameworkVersion: '3'
 
@@ -8,11 +8,11 @@ provider:
   region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
   environment:
-    TABLE_NAME: ${self:service}-subscribers-${self:provider.stage}
+    TABLE_NAME: ${self:custom.stackName}-subscribers-${self:provider.stage}
     NOTIFICATION_EMAIL: ${param:emailNotification, 'seu-email@exemplo.com'}
     DOMAIN_NAME: ${param:domainName, 'ebook.exemplo.com'}
-    EBOOK_BUCKET: ${self:service}-ebooks-${self:provider.stage}
-    EBOOK_KEY: assets/tendencias-industria-sc.pdf
+    EBOOK_BUCKET: ${self:custom.stackName}-ebooks-${self:provider.stage}
+    EBOOK_KEY: assets/dummy.pdf
   iam:
     role:
       statements:
@@ -28,7 +28,7 @@ provider:
         - Effect: Allow
           Action:
             - s3:GetObject
-          Resource: !Sub "arn:aws:s3:::${self:service}-ebooks-${self:provider.stage}/*"
+          Resource: !Sub "arn:aws:s3:::${self:custom.stackName}-ebooks-${self:provider.stage}/*"
 
 custom:
   stackName: ${param:stackName, 'ebook-landing-page'}
@@ -61,7 +61,7 @@ resources:
           RestrictPublicBuckets: false
         Tags:
           - Key: Name
-            Value: ${self:service}-website-bucket-${self:provider.stage}
+            Value: ${self:custom.stackName}-website-bucket-${self:provider.stage}
 
     # Política de bucket para permitir acesso público de leitura
     WebsiteBucketPolicy:
@@ -89,7 +89,7 @@ resources:
           RestrictPublicBuckets: true
         Tags:
           - Key: Name
-            Value: ${self:service}-ebooks-bucket-${self:provider.stage}
+            Value: ${self:custom.stackName}-ebooks-bucket-${self:provider.stage}
 
     # CloudFront Distribution
     CloudFrontDistribution:
@@ -137,7 +137,7 @@ resources:
             KeyType: HASH
         Tags:
           - Key: Name
-            Value: ${self:service}-subscribers-table-${self:provider.stage}
+            Value: ${self:custom.stackName}-subscribers-table-${self:provider.stage}
 
   Outputs:
     WebsiteURL:
