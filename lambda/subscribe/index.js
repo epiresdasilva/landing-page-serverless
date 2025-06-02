@@ -1,10 +1,10 @@
 /**
- * Lambda function para processar inscrições de e-book
+ * Lambda function para processar inscrições para o lançamento do livro físico
  * 
  * Este Lambda é acionado pelo API Gateway quando um usuário se inscreve
- * para baixar o e-book. Ele salva os dados no DynamoDB, envia uma
- * notificação por email para o administrador, e retorna um link assinado
- * para download imediato do e-book.
+ * para receber um lembrete do lançamento. Ele salva os dados no DynamoDB, 
+ * envia uma notificação por email para o administrador, e retorna um link 
+ * assinado para download do arquivo ICS de calendário.
  */
 
 exports.handler = async (event) => {
@@ -43,10 +43,10 @@ exports.handler = async (event) => {
       }
     }).promise();
     
-    // Generate a pre-signed URL for the e-book (expires in 15 minutes)
+    // Generate a pre-signed URL for the ICS calendar file (expires in 15 minutes)
     const signedUrl = s3.getSignedUrl('getObject', {
       Bucket: process.env.EBOOK_BUCKET,
-      Key: process.env.EBOOK_KEY,
+      Key: process.env.CALENDAR_KEY,
       Expires: 900 // 15 minutes in seconds
     });
     
@@ -58,11 +58,11 @@ exports.handler = async (event) => {
       },
       Message: {
         Subject: {
-          Data: 'Novo download do e-book'
+          Data: 'Novo cadastro para o lançamento do livro físico'
         },
         Body: {
           Text: {
-            Data: `Novo download do e-book "Tendências da Indústria em Santa Catarina"
+            Data: `Novo cadastro para o lançamento do livro físico
             
             Nome: ${name}
             Email: ${email}

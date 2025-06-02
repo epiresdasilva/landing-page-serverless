@@ -1,0 +1,24 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Amazon Q//Landing Page Lançamento//PT
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+SUMMARY:Lançamento do Livro Físico "O mais tímido palestrante internacional" de Evandro Pires
+DTSTART:20250602T100000Z
+DTEND:20250602T120000Z
+DTSTAMP:20250528T140000Z
+UID:lancamento-livro-fisico-2025@evandropires.com.br
+LOCATION:Online
+DESCRIPTION:Não perca o lançamento do livro físico "O mais tímido palestrante internacional" de Evandro Pires!\n\nCompre agora em: https://www.amazon.com.br/dp/B0F1J59FH8
+LOCATION:Online
+URL:https://www.amazon.com.br/dp/B0F1J59FH8
+STATUS:CONFIRMED
+SEQUENCE:0
+BEGIN:VALARM
+TRIGGER:-PT24H
+ACTION:DISPLAY
+DESCRIPTION:Lembrete: Lançamento do Livro Físico "O mais tímido palestrante internacional" amanhã! Acesse: https://www.amazon.com.br/dp/B0F1J59FH8
+END:VALARM
+END:VEVENT
+END:VCALENDAR

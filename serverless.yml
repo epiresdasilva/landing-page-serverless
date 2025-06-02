@@ -1,4 +1,4 @@
-service: ebook-landing-page
+service: lp-livro-fisico
 
 frameworkVersion: '3'
 
@@ -12,7 +12,7 @@ provider:
     NOTIFICATION_EMAIL: ${param:emailNotification, 'seu-email@exemplo.com'}
     DOMAIN_NAME: ${param:domainName, 'ebook.exemplo.com'}
     EBOOK_BUCKET: ${self:custom.stackName}-ebooks-${self:provider.stage}
-    EBOOK_KEY: assets/dummy.pdf
+    CALENDAR_KEY: assets/lancamento.ics
   iam:
     role:
       statements:
@@ -31,12 +31,13 @@ provider:
           Resource: !Sub "arn:aws:s3:::${self:custom.stackName}-ebooks-${self:provider.stage}/*"
 
 custom:
-  stackName: ${param:stackName, 'ebook-landing-page'}
+  stackName: ${param:stackName, 'livro-fisico'}
   s3Bucket: ${param:domainName, 'ebook.exemplo.com'}
   certificateArn: ${param:certificateArn, ''}
 
 functions:
   subscribe:
+    name: ${self:custom.stackName}-subscribe-${self:provider.stage}
     handler: lambda/subscribe/index.handler
     events:
       - http:
@@ -76,8 +77,8 @@ resources:
               Action: 's3:GetObject'
               Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
               
-    # S3 Bucket privado para armazenar o e-book
-    EbookBucket:
+    # S3 Bucket privado para armazenar o arquivo ICS
+    CalendarBucket:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.stackName}-ebooks-${self:provider.stage}
@@ -89,13 +90,14 @@ resources:
           RestrictPublicBuckets: true
         Tags:
           - Key: Name
-            Value: ${self:custom.stackName}-ebooks-bucket-${self:provider.stage}
+            Value: ${self:custom.stackName}-calendar-bucket-${self:provider.stage}
 
     # CloudFront Distribution
     CloudFrontDistribution:
       Type: AWS::CloudFront::Distribution
       Properties:
         DistributionConfig:
+          Comment: ${self:custom.stackName}-distribution-${self:provider.stage}
           Origins:
             - DomainName: !GetAtt WebsiteBucket.RegionalDomainName
               Id: S3Origin
@@ -139,6 +141,19 @@ resources:
           - Key: Name
             Value: ${self:custom.stackName}-subscribers-table-${self:provider.stage}
 
+    # IAM Role para a função Lambda
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.stackName}-lambda-role-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+
   Outputs:
     WebsiteURL:
       Description: URL do site S3
@@ -162,3 +177,7 @@ resources:
     CustomDomainURL:
       Description: URL personalizado (quando configurado no Route53)
       Value: !Sub "https://${self:custom.s3Bucket}"
+      
+    StackName:
+      Description: Nome da stack implantada
+      Value: ${self:custom.stackName}

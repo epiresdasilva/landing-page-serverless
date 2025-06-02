@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function submitForm(formData) {
         try {
             // Substitua esta URL pela URL real do seu API Gateway após a implantação
-            const apiUrl = 'https://lzdi5zpsi4.execute-api.us-east-1.amazonaws.com/prod/subscribe';
+            const apiUrl = 'https://5czd56tbjh.execute-api.us-east-1.amazonaws.com/dev/subscribe';
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result && result.downloadUrl) {
                 // Configurar o link de download direto com a URL assinada
                 directDownloadBtn.href = result.downloadUrl;
+                directDownloadBtn.setAttribute('download', 'lancamento-livro-fisico.ics');
                 
                 // Mostrar modal de sucesso
                 modal.style.display = 'block';

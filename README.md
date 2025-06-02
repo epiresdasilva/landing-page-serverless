@@ -1,12 +1,12 @@
-# Landing Page para Download de E-book
+# Landing Page para Lançamento de Livro Físico
 
-Este projeto implementa uma landing page estática para download de e-book em PDF, hospedada na AWS usando Serverless Framework.
+Este projeto implementa uma landing page estática para o lançamento de um livro físico, permitindo que os usuários adicionem o evento ao calendário através de um arquivo ICS. A solução é hospedada na AWS usando Serverless Framework.
 
 ## Arquitetura
 
 A solução utiliza os seguintes serviços AWS:
 
-- **Amazon S3**: Armazenamento da landing page estática e do arquivo PDF do e-book
+- **Amazon S3**: Armazenamento da landing page estática e do arquivo ICS de calendário
 - **Amazon CloudFront**: CDN para entrega rápida e segura do conteúdo
 - **Amazon API Gateway**: API RESTful para processar inscrições
 - **AWS Lambda**: Processamento serverless das inscrições
@@ -64,10 +64,10 @@ Antes de implantar, você precisa:
    aws ses verify-email-identity --email-address no-reply@seu-dominio.com
    ```
 
-3. Criar uma pasta para os arquivos do e-book e adicionar:
-   - O e-book em PDF em `src/assets/tendencias-industria-sc.pdf`
+3. Criar uma pasta para os arquivos e adicionar:
+   - O arquivo ICS em `src/assets/lancamento.ics`
    - O logo em `src/assets/logo.png`
-   - A imagem de capa do e-book em `src/assets/ebook-cover.png`
+   - A imagem de capa do livro em `src/assets/ebook-cover.png`
 
 ### 2. Instalação de Dependências
 
@@ -85,7 +85,7 @@ cd ../..
 
 ```bash
 # Implantar com Serverless Framework
-serverless deploy --param="domainName=seu-dominio.com" --param="emailNotification=seu-email@exemplo.com" --param="certificateArn=arn:aws:acm:us-east-1:123456789012:certificate/abcdef12-3456-7890-abcd-ef1234567890"
+serverless deploy --param="stackName=livro-fisico" --param="domainName=seu-dominio.com" --param="emailNotification=seu-email@exemplo.com" --param="certificateArn=arn:aws:acm:us-east-1:123456789012:certificate/abcdef12-3456-7890-abcd-ef1234567890"
 
 # Ou usando os scripts do package.json
 npm run deploy
@@ -126,7 +126,7 @@ Para automatizar o deploy usando GitHub Actions:
 4. API Gateway aciona uma função Lambda
 5. Lambda salva os dados no DynamoDB
 6. Lambda envia uma notificação por e-mail via SES
-7. Usuário recebe acesso ao download do e-book
+7. Usuário recebe o arquivo ICS para adicionar ao seu calendário
 
 ## Personalização
 
